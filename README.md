@@ -25,7 +25,7 @@ Later phases add login via existing identity providers (Google, GitHub, …) tha
 ## Scripts
 
 - `npm run build` — build contracts then the service
-- `npm start` — build and run on port 4000
+- `npm start` — build and run on port 5001
 - `npm test` — unit + integration tests
 - `npm run test:unit` / `npm run test:integration`
 
