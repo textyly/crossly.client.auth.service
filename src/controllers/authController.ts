@@ -6,7 +6,8 @@ import type { IAuthManager } from '../managers/types.js';
  * delegates all work to the {@link IAuthManager}.
  *
  * Mounted under `/auth`:
- *   POST /auth/guest  -> create a new anonymous guest session
+ *   POST /auth/guest    -> create a new anonymous guest session
+ *   POST /auth/refresh  -> roll an existing session forward (Authorization: Bearer <token>)
  */
 export class AuthController {
     public readonly router: Router;
@@ -18,10 +19,32 @@ export class AuthController {
 
     private registerRoutes(): void {
         this.router.post('/guest', this.createGuestSession);
+        this.router.post('/refresh', this.refreshSession);
     }
 
     private readonly createGuestSession = async (_req: Request, res: Response): Promise<void> => {
         const session = await this.manager.createGuestSession();
         res.status(201).json(session);
     };
+
+    private readonly refreshSession = async (req: Request, res: Response): Promise<void> => {
+        const token = this.extractBearerToken(req);
+        if (!token) {
+            res.status(401).json({ error: 'missing or malformed Authorization header' });
+            return;
+        }
+
+        try {
+            const session = await this.manager.refreshSession(token);
+            res.status(200).json(session);
+        } catch {
+            res.status(401).json({ error: 'invalid or expired token' });
+        }
+    };
+
+    private extractBearerToken(req: Request): string | undefined {
+        const header = req.header('authorization') ?? '';
+        const [scheme, value] = header.split(' ');
+        return scheme.toLowerCase() === 'bearer' && value ? value : undefined;
+    }
 }

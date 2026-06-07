@@ -6,15 +6,20 @@ Phase 1 (this version) is deliberately minimal: it issues **anonymous guest sess
 start creating patterns immediately, with no login. A guest session is a signed JWT whose `sub` is a
 freshly generated client id.
 
+Sessions are valid for **1 year**, and `POST /auth/refresh` re-issues a token for the same client id
+with a fresh expiry. The client calls it on use (e.g. on app start) so an active user's session keeps
+rolling forward and only lapses after a full year of inactivity.
+
 Later phases add login via existing identity providers (Google, GitHub, …) that issue a token of the
 **same shape**, so nothing downstream changes — see the project notes for the staged plan.
 
 ## Endpoints
 
-| Method | Route          | Purpose                              |
-|--------|----------------|--------------------------------------|
-| GET    | `/health`      | Liveness check                       |
-| POST   | `/auth/guest`  | Create a new anonymous guest session |
+| Method | Route           | Purpose                                                        |
+|--------|-----------------|---------------------------------------------------------------|
+| GET    | `/health`       | Liveness check                                                |
+| POST   | `/auth/guest`   | Create a new anonymous guest session                          |
+| POST   | `/auth/refresh` | Re-issue a token for the current session (`Authorization: Bearer <token>`) |
 
 ## Scripts
 

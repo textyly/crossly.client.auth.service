@@ -44,4 +44,31 @@ describe('auth API (integration)', () => {
 
         expect(first.body.clientId).to.not.equal(second.body.clientId);
     });
+
+    it('POST /auth/refresh rolls a session forward, keeping the same clientId', async () => {
+        const guest = await request(app).post('/auth/guest');
+        const { token, clientId } = guest.body as GuestSessionResponse;
+
+        const response = await request(app).post('/auth/refresh').set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).to.equal(200);
+        const body = response.body as GuestSessionResponse;
+        expect(body.clientId).to.equal(clientId);
+
+        const claims = await signer.verify(body.token);
+        expect(claims.sub).to.equal(clientId);
+        expect(claims.guest).to.equal(true);
+    });
+
+    it('POST /auth/refresh without a token returns 401', async () => {
+        const response = await request(app).post('/auth/refresh');
+
+        expect(response.status).to.equal(401);
+    });
+
+    it('POST /auth/refresh with an invalid token returns 401', async () => {
+        const response = await request(app).post('/auth/refresh').set('Authorization', 'Bearer not-a-jwt');
+
+        expect(response.status).to.equal(401);
+    });
 });
