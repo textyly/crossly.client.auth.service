@@ -1,4 +1,5 @@
 import express, { type Express, type Request, type Response } from 'express';
+import cors from 'cors';
 import { AuthController } from './controllers/authController.js';
 import { AuthManager } from './managers/authManager.js';
 import type { IJwtSigner } from './signer/types.js';
@@ -13,6 +14,7 @@ import type { IJwtSigner } from './signer/types.js';
 export function createApp(signer: IJwtSigner): Express {
     const app = express();
 
+    app.use(cors());
     app.use(express.json());
 
     app.get('/health', (_req: Request, res: Response) => {

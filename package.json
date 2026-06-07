@@ -22,6 +22,8 @@
   "author": "textyly community",
   "license": "Apache-2.0",
   "dependencies": {
+    "@types/cors": "^2.8.19",
+    "cors": "^2.8.6",
     "express": "^4.19.2",
     "jose": "^5.9.6"
   },
