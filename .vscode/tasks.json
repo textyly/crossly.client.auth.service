@@ -1,0 +1,34 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "npm run build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Run the build script using npm."
+        },
+        {
+            "label": "build:tests",
+            "type": "shell",
+            "command": "npm run build:tests",
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Full build then compile the tests using npm."
+        },
+        {
+            "label": "compile:tests",
+            "type": "shell",
+            "command": "npm run compile:tests",
+            "group": "build",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "detail": "Fast: recompile the tests (and imported source) for debugging."
+        }
+    ]
+}

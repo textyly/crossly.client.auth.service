@@ -1,0 +1,46 @@
+{
+  "name": "@textyly/crossly-client-auth-contracts",
+  "version": "0.0.1",
+  "description": "Shared contracts (types/DTOs) for the Crossly Client Auth service, consumable by clients such as crossly.ui.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "compile": "tsc --version && tsc",
+    "build": "npm i && npm run compile",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/textyly/crossly.client.auth.service.git",
+    "directory": "contracts"
+  },
+  "homepage": "https://github.com/textyly/crossly.client.auth.service/tree/main/contracts#readme",
+  "bugs": {
+    "url": "https://github.com/textyly/crossly.client.auth.service/issues"
+  },
+  "keywords": [
+    "crossly",
+    "textyly",
+    "contracts",
+    "auth",
+    "jwt"
+  ],
+  "author": "textyly community",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}

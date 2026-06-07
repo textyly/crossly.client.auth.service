@@ -1,0 +1,40 @@
+{
+  "name": "crossly.client.auth.service",
+  "version": "0.0.1",
+  "description": "TBD",
+  "main": "dist/app.js",
+  "type": "module",
+  "scripts": {
+    "compile": "tsc --version && tsc",
+    "build:contracts": "npm --prefix contracts install && npm --prefix contracts run compile",
+    "build": "npm i && npm run build:contracts && npm run compile",
+    "start": "npm run build && node dist/app.js",
+    "compile:tests": "tsc --version && tsc -p tsconfig.test.json",
+    "build:tests": "npm run build && npm run compile:tests",
+    "test": "npm run build:tests && mocha 'dist-tests/tests/**/*.test.js'",
+    "test:unit": "npm run build:tests && mocha 'dist-tests/tests/unit/**/*.test.js'",
+    "test:integration": "npm run build:tests && mocha 'dist-tests/tests/integration/**/*.test.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/textyly/crossly.client.auth.service.git"
+  },
+  "author": "textyly community",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@textyly/crossly-client-auth-contracts": "file:contracts",
+    "express": "^4.19.2",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.0.0",
+    "@types/express": "^4.17.21",
+    "@types/mocha": "^10.0.8",
+    "@types/node": "^20.0.0",
+    "@types/supertest": "^7.2.0",
+    "chai": "^5.1.1",
+    "mocha": "^10.7.3",
+    "supertest": "^7.2.2",
+    "typescript": "^5.6.2"
+  }
+}

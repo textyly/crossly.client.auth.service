@@ -1,0 +1,95 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Current Test File",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/mocha.js",
+            "runtimeArgs": [
+                "--enable-source-maps"
+            ],
+            "args": [
+                "--timeout",
+                "30000",
+                "${workspaceFolder}/dist-tests/**/${fileBasenameNoExtension}.js"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist-tests/**/*.js"
+            ],
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "../src/*": "${workspaceFolder}/src/*",
+                "../tests/*": "${workspaceFolder}/tests/*"
+            },
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
+            "preLaunchTask": "compile:tests"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug All Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/mocha.js",
+            "runtimeArgs": [
+                "--enable-source-maps"
+            ],
+            "args": [
+                "--timeout",
+                "30000",
+                "${workspaceFolder}/dist-tests/tests/**/*.test.js"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist-tests/**/*.js"
+            ],
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "../src/*": "${workspaceFolder}/src/*",
+                "../tests/*": "${workspaceFolder}/tests/*"
+            },
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
+            "preLaunchTask": "build:tests"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug App",
+            "program": "${workspaceFolder}/dist/app.js",
+            "runtimeArgs": [
+                "--enable-source-maps"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "../src/*": "${workspaceFolder}/src/*"
+            },
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
+            "preLaunchTask": "build"
+        }
+    ]
+}
