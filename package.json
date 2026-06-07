@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "compile": "tsc --version && tsc",
-    "build:contracts": "npm --prefix contracts install && npm --prefix contracts run compile",
+    "build:contracts": "tsc -p contracts/tsconfig.json",
     "build": "npm i && npm run build:contracts && npm run compile",
     "start": "npm run build && node dist/app.js",
     "compile:tests": "tsc --version && tsc -p tsconfig.test.json",
@@ -22,7 +22,6 @@
   "author": "textyly community",
   "license": "Apache-2.0",
   "dependencies": {
-    "@textyly/crossly-client-auth-contracts": "file:contracts",
     "express": "^4.19.2",
     "jose": "^5.9.6"
   },
