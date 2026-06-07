@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { GuestSessionResponse } from '@textyly/crossly-client-auth-contracts';
+import type { AccessTokenClaims, GuestSessionResponse } from '@textyly/crossly-client-auth-contracts';
 import type { IAuthManager } from './types.js';
 import type { IJwtSigner } from '../signer/types.js';
 
@@ -16,6 +16,7 @@ const SESSION_TTL_SECONDS: number = 60 * 60 * 24 * 365;
  * - {@link createGuestSession} mints a brand-new anonymous session (new clientId).
  * - {@link refreshSession} re-issues a token for an existing session, preserving
  *   its identity but resetting the expiry (a sliding/rolling session).
+ * - {@link validate} verifies a token and returns its claims (used by the gateway).
  *
  * Token signing/verification is delegated to the injected {@link IJwtSigner}.
  */
@@ -38,5 +39,10 @@ export class AuthManager implements IAuthManager {
         const reissued = await this.signer.sign(claims.sub, claims.guest, SESSION_TTL_SECONDS);
 
         return { token: reissued.token, clientId: claims.sub, expiresAt: reissued.expiresAt };
+    }
+
+    public validate(token: string): Promise<AccessTokenClaims> {
+        // Verify signature + expiry; resolves with the claims or rejects.
+        return this.signer.verify(token);
     }
 }

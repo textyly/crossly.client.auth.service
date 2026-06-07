@@ -63,4 +63,24 @@ describe('AuthManager', () => {
 
         expect(threw).to.equal(true);
     });
+
+    it('validates a token and returns its claims', async () => {
+        const session = await manager.createGuestSession();
+
+        const claims = await manager.validate(session.token);
+
+        expect(claims.sub).to.equal(session.clientId);
+        expect(claims.guest).to.equal(true);
+    });
+
+    it('rejects validating an invalid token', async () => {
+        let threw = false;
+        try {
+            await manager.validate('not-a-jwt');
+        } catch {
+            threw = true;
+        }
+
+        expect(threw).to.equal(true);
+    });
 });

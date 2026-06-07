@@ -15,11 +15,12 @@ Later phases add login via existing identity providers (Google, GitHub, …) tha
 
 ## Endpoints
 
-| Method | Route           | Purpose                                                        |
-|--------|-----------------|---------------------------------------------------------------|
-| GET    | `/health`       | Liveness check                                                |
-| POST   | `/auth/guest`   | Create a new anonymous guest session                          |
-| POST   | `/auth/refresh` | Re-issue a token for the current session (`Authorization: Bearer <token>`) |
+| Method | Route            | Purpose                                                        |
+|--------|------------------|---------------------------------------------------------------|
+| GET    | `/health`        | Liveness check                                                |
+| POST   | `/auth/guest`    | Create a new anonymous guest session                          |
+| POST   | `/auth/refresh`  | Re-issue a token for the current session (`Authorization: Bearer <token>`) |
+| GET    | `/auth/validate` | Verify a token; on success returns `200` with `X-Client-Id` / `X-Guest` response headers, else `401`. Intended for an API-gateway **ForwardAuth** check so downstream services receive a trusted `clientId` without holding the signing key. |
 
 ## Scripts
 

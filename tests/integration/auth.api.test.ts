@@ -71,4 +71,27 @@ describe('auth API (integration)', () => {
 
         expect(response.status).to.equal(401);
     });
+
+    it('GET /auth/validate returns 200 and the identity headers for a valid token', async () => {
+        const guest = await request(app).post('/auth/guest');
+        const { token, clientId } = guest.body as GuestSessionResponse;
+
+        const response = await request(app).get('/auth/validate').set('Authorization', `Bearer ${token}`);
+
+        expect(response.status).to.equal(200);
+        expect(response.headers['x-client-id']).to.equal(clientId);
+        expect(response.headers['x-guest']).to.equal('true');
+    });
+
+    it('GET /auth/validate without a token returns 401', async () => {
+        const response = await request(app).get('/auth/validate');
+
+        expect(response.status).to.equal(401);
+    });
+
+    it('GET /auth/validate with an invalid token returns 401', async () => {
+        const response = await request(app).get('/auth/validate').set('Authorization', 'Bearer not-a-jwt');
+
+        expect(response.status).to.equal(401);
+    });
 });
