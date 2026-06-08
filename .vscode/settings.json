@@ -16,6 +16,9 @@
         "**/*.log": true
     },
     "typescript.preferences.importModuleSpecifierEnding": "js",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
     "editor.formatOnSave": true,
-    "files.trimTrailingWhitespace": true
+    "files.trimTrailingWhitespace": true,
+    "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

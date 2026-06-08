@@ -2,12 +2,11 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "./dist-tests",
     "rootDir": "./",
-    "baseUrl": ".",
     "paths": {
-      "@textyly/crossly-client-auth-contracts": ["contracts/dist/index.d.ts"]
+      "@textyly/crossly-client-auth-contracts": ["./contracts/dist/index.d.ts"]
     },
     "strict": true,
     "sourceMap": true,

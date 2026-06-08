@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
-    "compile": "tsc --version && tsc",
+    "compile": "tsc --version && tsc -p tsconfig.build.json",
     "build:contracts": "tsc -p contracts/tsconfig.json",
     "build": "npm i && npm run build:contracts && npm run compile",
     "start": "npm run build && node dist/app.js",
