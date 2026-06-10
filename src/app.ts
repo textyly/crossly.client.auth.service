@@ -1,6 +1,8 @@
+import pg from 'pg';
 import { createApp } from './createApp.js';
 import { JwtSigner } from './signer/jwtSigner.js';
-import { runMigrations } from './db/migrate.js';
+import { PgClientRepository } from './repository/pgClientRepository.js';
+import { databaseUrl, runMigrations } from './db/migrate.js';
 
 const port = 5001;
 // HS256 shared secret. MUST be overridden via AUTH_JWT_SECRET in any real environment.
@@ -18,8 +20,11 @@ const secret = process.env.AUTH_JWT_SECRET ?? 'dev-only-insecure-secret-change-m
 async function main(): Promise<void> {
     await runMigrations();
 
+    // One pool for the app's lifetime, backing the client repository.
+    const pool = new pg.Pool({ connectionString: databaseUrl() });
     const signer = new JwtSigner(secret);
-    const app = createApp(signer);
+    const clients = new PgClientRepository(pool);
+    const app = createApp({ signer, clients });
 
     app.listen(port, () => {
         console.log(`crossly.client.auth.service listening on port ${port}`);

@@ -1,13 +1,14 @@
 import { expect } from 'chai';
 import { AuthManager } from '../../src/managers/authManager.js';
 import { JwtSigner } from '../../src/signer/jwtSigner.js';
+import { InMemoryClientRepository } from '../../src/repository/inMemoryClientRepository.js';
 
 describe('AuthManager', () => {
     const signer = new JwtSigner('test-secret');
     let manager: AuthManager;
 
     beforeEach(() => {
-        manager = new AuthManager(signer);
+        manager = new AuthManager(signer, new InMemoryClientRepository());
     });
 
     it('creates a guest session with a token, clientId and expiry', async () => {

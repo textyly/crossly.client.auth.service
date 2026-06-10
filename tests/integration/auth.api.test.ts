@@ -3,6 +3,7 @@ import request from 'supertest';
 import type { GuestSessionResponse } from '@textyly/crossly-client-auth-contracts';
 import { createApp } from '../../src/createApp.js';
 import { JwtSigner } from '../../src/signer/jwtSigner.js';
+import { InMemoryClientRepository } from '../../src/repository/inMemoryClientRepository.js';
 
 // Integration tests drive the full HTTP stack (controller -> manager -> signer)
 // through supertest with a test secret, so no external dependency is required.
@@ -15,7 +16,7 @@ describe('auth API (integration)', () => {
     let app: ReturnType<typeof createApp>;
 
     beforeEach(() => {
-        app = createApp(signer);
+        app = createApp({ signer, clients: new InMemoryClientRepository() });
     });
 
     it('GET /health returns ok', async () => {

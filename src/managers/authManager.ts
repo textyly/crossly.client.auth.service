@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { AccessTokenClaims, GuestSessionResponse } from '@textyly/crossly-client-auth-contracts';
-import type { IAuthManager } from './types.js';
+import type { IAuthManager, ResolvedLogin } from './types.js';
 import type { IJwtSigner } from '../signer/types.js';
+import type { IClientRepository } from '../repository/types.js';
+import type { OidcIdentity } from '../oidc/types.js';
 
 /**
  * Sessions are valid for 1 year. Combined with refresh-on-use
@@ -17,11 +19,17 @@ const SESSION_TTL_SECONDS: number = 60 * 60 * 24 * 365;
  * - {@link refreshSession} re-issues a token for an existing session, preserving
  *   its identity but resetting the expiry (a sliding/rolling session).
  * - {@link validate} verifies a token and returns its claims (used by the gateway).
+ * - {@link resolveLogin} maps a verified provider identity to a stable clientId,
+ *   promoting the current guest in place on first login.
  *
- * Token signing/verification is delegated to the injected {@link IJwtSigner}.
+ * Token signing/verification is delegated to the injected {@link IJwtSigner};
+ * account persistence to the injected {@link IClientRepository}.
  */
 export class AuthManager implements IAuthManager {
-    public constructor(private readonly signer: IJwtSigner) {}
+    public constructor(
+        private readonly signer: IJwtSigner,
+        private readonly clients: IClientRepository,
+    ) {}
 
     public async createGuestSession(): Promise<GuestSessionResponse> {
         const clientId = randomUUID();
@@ -44,5 +52,34 @@ export class AuthManager implements IAuthManager {
     public validate(token: string): Promise<AccessTokenClaims> {
         // Verify signature + expiry; resolves with the claims or rejects.
         return this.signer.verify(token);
+    }
+
+    public async resolveLogin(
+        identity: OidcIdentity,
+        guestClientId?: string,
+    ): Promise<ResolvedLogin> {
+        const existing = await this.clients.findByProvider(identity.provider, identity.subject);
+        if (existing) {
+            // Returning user on this provider — recognized on any device. The
+            // current guest id (if any) is discarded by the caller; this account's
+            // id wins.
+            await this.clients.touchLastLogin(existing.clientId);
+            return { clientId: existing.clientId, created: false, promoted: false };
+        }
+
+        // New external identity. Promote the current guest in place if one is
+        // present (the account adopts the guest's id, so the guest's data on this
+        // device carries over with no migration); otherwise mint a fresh id.
+        const promoted = guestClientId !== undefined;
+        const clientId = guestClientId ?? randomUUID();
+
+        await this.clients.create({
+            clientId,
+            provider: identity.provider,
+            providerSubject: identity.subject,
+            email: identity.email,
+        });
+
+        return { clientId, created: true, promoted };
     }
 }

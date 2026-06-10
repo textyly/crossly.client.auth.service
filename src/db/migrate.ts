@@ -22,13 +22,16 @@ import pg from 'pg';
 const DEFAULT_DATABASE_URL = 'postgres://crossly:crossly@127.0.0.1:5433/crossly_auth';
 const MIGRATIONS_DIR = join(process.cwd(), 'migrations');
 
+/** The Postgres connection string for the service (env override, else dev default). */
+export function databaseUrl(): string {
+    return process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL;
+}
+
 // Constant key for the advisory lock that serializes migrations cluster-wide.
 // Any fixed value works as long as it is unique to this concern.
 const MIGRATION_LOCK_KEY = 4242420001;
 
-export async function runMigrations(
-    connectionString: string = process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL,
-): Promise<void> {
+export async function runMigrations(connectionString: string = databaseUrl()): Promise<void> {
     const pool = new pg.Pool({ connectionString });
     try {
         await migrateWithPool(pool);
