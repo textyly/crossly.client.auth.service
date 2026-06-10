@@ -16,3 +16,5 @@ client_secret_*.json
 
 # Claude context files
 CLAUDE.md
+
+google_test.txt
