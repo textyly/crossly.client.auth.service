@@ -9,6 +9,9 @@
     "build:contracts": "tsc -p contracts/tsconfig.json",
     "build": "npm i && npm run build:contracts && npm run compile",
     "start": "npm run build && node dist/app.js",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "migrate": "npm run compile && node dist/db/migrate.js",
     "compile:tests": "tsc --version && tsc -p tsconfig.test.json",
     "build:tests": "npm run build && npm run compile:tests",
     "test": "npm run build:tests && mocha 'dist-tests/tests/**/*.test.js'",
@@ -25,13 +28,15 @@
     "@types/cors": "^2.8.19",
     "cors": "^2.8.6",
     "express": "^4.19.2",
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/chai": "^5.0.0",
     "@types/express": "^4.17.21",
     "@types/mocha": "^10.0.8",
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.10",
     "@types/supertest": "^7.2.0",
     "chai": "^5.1.1",
     "mocha": "^10.7.3",

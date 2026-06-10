@@ -1,0 +1,25 @@
+# Local dev Postgres for crossly.client.auth.service.
+#
+#   docker compose up -d      # start
+#   docker compose down       # stop (keeps data)
+#   docker compose down -v     # stop and wipe data
+#
+# Published on host port 5433 (not 5432) so it can coexist with a native Postgres
+# that already owns 5432. Matches the default DATABASE_URL used by the migration
+# runner and the service:
+#   postgres://crossly:crossly@127.0.0.1:5433/crossly_auth
+services:
+  postgres:
+    image: postgres:17
+    container_name: crossly-auth-postgres
+    environment:
+      POSTGRES_USER: crossly
+      POSTGRES_PASSWORD: crossly
+      POSTGRES_DB: crossly_auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - crossly-auth-pgdata:/var/lib/postgresql/data
+
+volumes:
+  crossly-auth-pgdata:
