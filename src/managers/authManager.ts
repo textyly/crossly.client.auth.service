@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import type { AccessTokenClaims, GuestSessionResponse } from '@textyly/crossly-client-auth-contracts';
+import type {
+    AccessTokenClaims,
+    GuestSessionResponse,
+    MeResponse,
+} from '@textyly/crossly-client-auth-contracts';
 import type { IAuthManager, ResolvedLogin } from './types.js';
 import type { IJwtSigner } from '../signer/types.js';
 import type { IClientRepository } from '../repository/types.js';
@@ -36,6 +40,22 @@ export class AuthManager implements IAuthManager {
         const { token, expiresAt } = await this.signer.sign(clientId, true, SESSION_TTL_SECONDS);
 
         return { token, clientId, expiresAt };
+    }
+
+    public async createAuthenticatedSession(clientId: string): Promise<GuestSessionResponse> {
+        const { token, expiresAt } = await this.signer.sign(clientId, false, SESSION_TTL_SECONDS);
+        return { token, clientId, expiresAt };
+    }
+
+    public async describeSession(token: string): Promise<MeResponse> {
+        const claims = await this.signer.verify(token);
+        if (claims.guest) {
+            return { clientId: claims.sub, guest: true };
+        }
+
+        // Authenticated: surface the stored email (display only) if we have one.
+        const client = await this.clients.findById(claims.sub);
+        return { clientId: claims.sub, guest: false, email: client?.email };
     }
 
     public async refreshSession(token: string): Promise<GuestSessionResponse> {

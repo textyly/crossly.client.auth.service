@@ -26,13 +26,16 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@types/cors": "^2.8.19",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^4.19.2",
     "jose": "^5.9.6",
+    "openid-client": "^6.8.4",
     "pg": "^8.13.1"
   },
   "devDependencies": {
     "@types/chai": "^5.0.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^4.17.21",
     "@types/mocha": "^10.0.8",
     "@types/node": "^20.0.0",

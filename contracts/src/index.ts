@@ -19,12 +19,35 @@ export interface AccessTokenClaims {
     exp: number;
 }
 
-/** Response returned when a new anonymous guest session is created. */
+/**
+ * Internal session shape produced by the signer/manager: the raw token + expiry.
+ * In the BFF cookie model the token is set as an httpOnly cookie rather than
+ * returned in the response body — see {@link SessionSummary} / {@link MeResponse}.
+ */
 export interface GuestSessionResponse {
-    /** Signed JWT to send as `Authorization: Bearer <token>`. */
+    /** Signed JWT (set by the server as an httpOnly session cookie). */
     token: string;
-    /** The guest's client identifier (equals the token's `sub`). */
+    /** The client identifier (equals the token's `sub`). */
     clientId: string;
     /** Token expiry, in seconds since the epoch. */
     expiresAt: number;
+}
+
+/**
+ * Minimal session summary returned by `POST /auth/guest`, `POST /auth/refresh`
+ * and `GET /auth/validate`. The session token itself rides in an httpOnly cookie.
+ */
+export interface SessionSummary {
+    /** The client identifier (equals the session token's `sub`). */
+    clientId: string;
+    /** True for anonymous guests; false for authenticated users. */
+    guest: boolean;
+}
+
+/** Identity returned by `GET /auth/me` so the UI knows who it is (it can't read the cookie). */
+export interface MeResponse {
+    clientId: string;
+    guest: boolean;
+    /** Present for authenticated users when the provider reported one; display only. */
+    email?: string;
 }

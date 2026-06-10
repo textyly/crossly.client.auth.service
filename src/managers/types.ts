@@ -1,4 +1,8 @@
-import type { AccessTokenClaims, GuestSessionResponse } from '@textyly/crossly-client-auth-contracts';
+import type {
+    AccessTokenClaims,
+    GuestSessionResponse,
+    MeResponse,
+} from '@textyly/crossly-client-auth-contracts';
 import type { OidcIdentity } from '../oidc/types.js';
 
 /**
@@ -20,6 +24,16 @@ export interface ResolvedLogin {
 export interface IAuthManager {
     /** Create a fresh anonymous guest session (new clientId + signed token). */
     createGuestSession(): Promise<GuestSessionResponse>;
+
+    /** Mint an authenticated (guest:false) session token for an existing clientId. */
+    createAuthenticatedSession(clientId: string): Promise<GuestSessionResponse>;
+
+    /**
+     * Verify a token and describe the session for the UI: `{ clientId, guest, email? }`.
+     * Email is looked up for authenticated users; guests have none. Throws if the
+     * token is invalid or expired.
+     */
+    describeSession(token: string): Promise<MeResponse>;
 
     /**
      * Re-issue a token for the session identified by `token`, preserving its
