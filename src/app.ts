@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import pg from 'pg';
 import { createApp } from './createApp.js';
 import { JwtSigner } from './signer/jwtSigner.js';

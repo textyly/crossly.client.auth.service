@@ -30,8 +30,12 @@ export interface IOidcProvider {
     authorizeUrl(state: string, codeVerifier: string): Promise<string>;
 
     /**
-     * Exchange the authorization `code` from the callback (validated against the
-     * stashed `codeVerifier`) for the verified {@link OidcIdentity}.
+     * Exchange the authorization callback for the verified {@link OidcIdentity}.
+     *
+     * `callbackParams` are ALL query parameters the provider returned on the
+     * redirect (code, state, iss, …) — passed whole so the OIDC library can
+     * validate them (e.g. the RFC 9207 `iss`). `codeVerifier` is the stashed PKCE
+     * verifier.
      */
-    exchangeCode(code: string, codeVerifier: string): Promise<OidcIdentity>;
+    exchangeCode(callbackParams: URLSearchParams, codeVerifier: string): Promise<OidcIdentity>;
 }

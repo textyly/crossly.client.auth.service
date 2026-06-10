@@ -23,7 +23,10 @@ export class FakeOidcProvider implements IOidcProvider {
         return `https://fake-idp.test/authorize?state=${encodeURIComponent(state)}`;
     }
 
-    public async exchangeCode(_code: string, _codeVerifier: string): Promise<OidcIdentity> {
+    public async exchangeCode(
+        _callbackParams: URLSearchParams,
+        _codeVerifier: string,
+    ): Promise<OidcIdentity> {
         return this.identity;
     }
 }

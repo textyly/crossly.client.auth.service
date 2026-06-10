@@ -42,9 +42,15 @@ export class GoogleProvider implements IOidcProvider {
         return url.href;
     }
 
-    public async exchangeCode(code: string, codeVerifier: string): Promise<OidcIdentity> {
+    public async exchangeCode(
+        callbackParams: URLSearchParams,
+        codeVerifier: string,
+    ): Promise<OidcIdentity> {
+        // Rebuild the exact callback URL openid-client expects: our redirect URI
+        // plus ALL of the provider's returned params (code, state, iss, …) so its
+        // response validation (incl. the RFC 9207 issuer check) passes.
         const currentUrl = new URL(this.redirectUri);
-        currentUrl.searchParams.set('code', code);
+        currentUrl.search = callbackParams.toString();
 
         const tokens = await oidc.authorizationCodeGrant(this.config, currentUrl, {
             pkceCodeVerifier: codeVerifier,

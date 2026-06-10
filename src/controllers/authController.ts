@@ -137,7 +137,12 @@ export class AuthController {
         }
 
         try {
-            const identity = await this.oidc.exchangeCode(code, stash.codeVerifier);
+            // Pass ALL callback params (code, state, iss, …) through to the provider.
+            const queryIndex = req.originalUrl.indexOf('?');
+            const callbackParams = new URLSearchParams(
+                queryIndex >= 0 ? req.originalUrl.slice(queryIndex + 1) : '',
+            );
+            const identity = await this.oidc.exchangeCode(callbackParams, stash.codeVerifier);
             // Promote the current guest in place if one is present on this device.
             const guestClientId = await this.guestClientId(req);
             const resolved = await this.manager.resolveLogin(identity, guestClientId);
@@ -146,7 +151,8 @@ export class AuthController {
             // Overwriting the session cookie also "clears" the guest session.
             this.setSessionCookie(res, session.token, session.expiresAt);
             res.redirect(302, this.config.uiRedirectUrl);
-        } catch {
+        } catch (e) {
+            console.log(e);
             res.status(400).json({ error: 'login failed' });
         }
     };
