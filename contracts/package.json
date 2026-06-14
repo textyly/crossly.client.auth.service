@@ -1,6 +1,6 @@
 {
   "name": "@textyly/crossly-client-auth-contracts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Shared contracts (types/DTOs) for the Crossly Client Auth service, consumable by clients such as crossly.ui.",
   "type": "module",
   "main": "./dist/index.js",
