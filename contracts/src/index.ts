@@ -22,7 +22,7 @@ export interface AccessTokenClaims {
 /**
  * Internal session shape produced by the signer/manager: the raw token + expiry.
  * In the BFF cookie model the token is set as an httpOnly cookie rather than
- * returned in the response body — see {@link SessionSummary} / {@link MeResponse}.
+ * returned in the response body — see {@link SessionResponse} / {@link MeResponse}.
  */
 export interface GuestSessionResponse {
     /** Signed JWT (set by the server as an httpOnly session cookie). */
@@ -37,7 +37,7 @@ export interface GuestSessionResponse {
  * Minimal session summary returned by `POST /auth/guest`, `POST /auth/refresh`
  * and `GET /auth/validate`. The session token itself rides in an httpOnly cookie.
  */
-export interface SessionSummary {
+export interface SessionResponse {
     /** The client identifier (equals the session token's `sub`). */
     clientId: string;
     /** True for anonymous guests; false for authenticated users. */

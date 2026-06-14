@@ -45,7 +45,22 @@ export class AuthController {
         this.router.post('/logout', this.logout);
     }
 
-    private readonly createGuestSession = async (_req: Request, res: Response): Promise<void> => {
+    private readonly createGuestSession = async (req: Request, res: Response): Promise<void> => {
+        // Idempotent: if a valid session already exists (guest OR authenticated),
+        // return it instead of minting a new guest — so this can never downgrade a
+        // logged-in user or churn an existing guest. To abandon a session, use
+        // POST /auth/logout (which clears the cookie); the next call then creates one.
+        const existing = this.sessionToken(req);
+        if (existing) {
+            try {
+                const claims = await this.manager.validate(existing);
+                res.status(200).json({ clientId: claims.sub, guest: claims.guest });
+                return;
+            } catch {
+                // Invalid/expired cookie -> fall through and mint a fresh guest.
+            }
+        }
+
         const session = await this.manager.createGuestSession();
         this.setSessionCookie(res, session.token, session.expiresAt);
         res.status(201).json({ clientId: session.clientId, guest: true });
@@ -113,7 +128,8 @@ export class AuthController {
             const url = await this.oidc.authorizeUrl(state, codeVerifier);
             res.cookie(OAUTH_COOKIE, JSON.stringify({ state, codeVerifier }), {
                 ...this.baseCookieOptions(),
-                path: '/auth',
+                // path '/' (not the mount path) so it survives wherever the auth
+                // routes are mounted; it's short-lived, signed and single-use.
                 maxAge: OAUTH_COOKIE_TTL_MS,
                 signed: true,
             });
@@ -129,7 +145,7 @@ export class AuthController {
         const stash = this.readOauthCookie(req);
 
         // The OAuth cookie is single-use.
-        res.clearCookie(OAUTH_COOKIE, { path: '/auth' });
+        res.clearCookie(OAUTH_COOKIE, { path: '/' });
 
         if (!code || !state || !stash || stash.state !== state) {
             res.status(400).json({ error: 'invalid oauth callback' });

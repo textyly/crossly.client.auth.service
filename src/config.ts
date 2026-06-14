@@ -30,11 +30,14 @@ export interface GoogleConfig {
 }
 
 export function loadConfig(): AuthConfig {
-    const uiRedirectUrl = process.env.UI_URL ?? 'http://localhost:5000';
+    // Where the browser lands after login. May include a path (e.g. the static
+    // UI entry); the CORS origin is derived from just its scheme+host+port, since
+    // the browser's Origin header never carries a path.
+    const uiRedirectUrl = process.env.UI_URL ?? 'http://localhost:5000/dist/index.html';
     return {
         cookieSecret: process.env.COOKIE_SECRET ?? 'dev-only-cookie-secret-change-me',
         uiRedirectUrl,
-        corsOrigin: process.env.CORS_ORIGIN ?? uiRedirectUrl,
+        corsOrigin: process.env.CORS_ORIGIN ?? new URL(uiRedirectUrl).origin,
         secureCookies: (process.env.SECURE_COOKIES ?? 'false') === 'true',
     };
 }
@@ -43,6 +46,6 @@ export function loadGoogleConfig(): GoogleConfig {
     return {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackUrl: process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:5001/auth/callback',
+        callbackUrl: process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:5001/api/v1/auth/callback',
     };
 }

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import request from 'supertest';
-import type { MeResponse, SessionSummary } from '@textyly/crossly-client-auth-contracts';
+import type { MeResponse, SessionResponse } from '@textyly/crossly-client-auth-contracts';
 import { createApp } from '../../src/createApp.js';
 import { JwtSigner } from '../../src/signer/jwtSigner.js';
 import { InMemoryClientRepository } from '../../src/repository/inMemoryClientRepository.js';
@@ -39,9 +39,9 @@ describe('auth API (integration, cookie model)', () => {
 
     // Run the OAuth dance on an agent: /login -> read state from the redirect -> /callback.
     async function login(agent: Agent): Promise<request.Response> {
-        const start = await agent.get('/auth/login');
+        const start = await agent.get('/api/v1/auth/login');
         const state = new URL(start.headers.location).searchParams.get('state') ?? '';
-        return agent.get(`/auth/callback?code=fake-code&state=${encodeURIComponent(state)}`);
+        return agent.get(`/api/v1/auth/callback?code=fake-code&state=${encodeURIComponent(state)}`);
     }
 
     function sessionCookie(res: request.Response): string | undefined {
@@ -55,12 +55,12 @@ describe('auth API (integration, cookie model)', () => {
         expect(response.body).to.deep.equal({ status: 'ok' });
     });
 
-    it('POST /auth/guest sets an httpOnly session cookie and returns a guest summary', async () => {
+    it('POST /api/v1/auth/guest sets an httpOnly session cookie and returns a guest summary', async () => {
         const agent = request.agent(app);
-        const response = await agent.post('/auth/guest');
+        const response = await agent.post('/api/v1/auth/guest');
 
         expect(response.status).to.equal(201);
-        const body = response.body as SessionSummary;
+        const body = response.body as SessionResponse;
         expect(body.clientId).to.be.a('string').with.length.greaterThan(0);
         expect(body.guest).to.equal(true);
 
@@ -69,38 +69,62 @@ describe('auth API (integration, cookie model)', () => {
         expect(cookie).to.contain('HttpOnly');
 
         // The cookie is a valid session: /validate accepts it and reports the same id.
-        const validated = await agent.get('/auth/validate');
+        const validated = await agent.get('/api/v1/auth/validate');
         expect(validated.status).to.equal(200);
         expect(validated.headers['x-client-id']).to.equal(body.clientId);
         expect(validated.headers['x-guest']).to.equal('true');
     });
 
     it('issues a different clientId for each guest', async () => {
-        const first = await request.agent(app).post('/auth/guest');
-        const second = await request.agent(app).post('/auth/guest');
+        const first = await request.agent(app).post('/api/v1/auth/guest');
+        const second = await request.agent(app).post('/api/v1/auth/guest');
         expect(first.body.clientId).to.not.equal(second.body.clientId);
     });
 
-    it('POST /auth/refresh rolls the session cookie forward, keeping the clientId', async () => {
+    it('POST /api/v1/auth/guest is idempotent — a second call returns the same guest (200)', async () => {
         const agent = request.agent(app);
-        const guest = await agent.post('/auth/guest');
+        const first = await agent.post('/api/v1/auth/guest');
+        expect(first.status).to.equal(201);
 
-        const refreshed = await agent.post('/auth/refresh');
+        const second = await agent.post('/api/v1/auth/guest');
+        expect(second.status).to.equal(200);
+        expect((second.body as SessionResponse).clientId).to.equal(first.body.clientId);
+    });
+
+    it('POST /api/v1/auth/guest does not downgrade a logged-in user', async () => {
+        const agent = request.agent(app);
+        await agent.post('/api/v1/auth/guest');
+        await login(agent);
+        const me = (await agent.get('/api/v1/auth/me')).body as MeResponse;
+        expect(me.guest).to.equal(false);
+
+        const response = await agent.post('/api/v1/auth/guest');
+        expect(response.status).to.equal(200);
+        const body = response.body as SessionResponse;
+        expect(body.clientId).to.equal(me.clientId); // same account, not a new guest
+        expect(body.guest).to.equal(false); // still authenticated
+    });
+
+    it('POST /api/v1/auth/refresh rolls the session cookie forward, keeping the clientId', async () => {
+        const agent = request.agent(app);
+        const guest = await agent.post('/api/v1/auth/guest');
+
+        const refreshed = await agent.post('/api/v1/auth/refresh');
         expect(refreshed.status).to.equal(200);
-        const body = refreshed.body as SessionSummary;
+        const body = refreshed.body as SessionResponse;
         expect(body.clientId).to.equal(guest.body.clientId);
         expect(body.guest).to.equal(true);
         expect(sessionCookie(refreshed)).to.be.a('string');
     });
 
     it('rejects refresh / validate / me with no session cookie (401)', async () => {
-        expect((await request(app).post('/auth/refresh')).status).to.equal(401);
-        expect((await request(app).get('/auth/validate')).status).to.equal(401);
-        expect((await request(app).get('/auth/me')).status).to.equal(401);
+        expect((await request(app).post('/api/v1/auth/refresh')).status).to.equal(401);
+        expect((await request(app).get('/api/v1/auth/validate')).status).to.equal(401);
+        expect((await request(app).get('/api/v1/auth/me')).status).to.equal(401);
     });
 
-    it('GET /auth/login redirects to the provider with state and sets the oauth cookie', async () => {
-        const response = await request(app).get('/auth/login');
+    it('GET /api/v1/auth/login redirects to the provider with state and sets the oauth cookie', async () => {
+        const response = await request(app).get('/api/v1/auth/login');
 
         expect(response.status).to.equal(302);
         const location = new URL(response.headers.location);
@@ -111,14 +135,14 @@ describe('auth API (integration, cookie model)', () => {
         expect(set?.some((cookie) => cookie.startsWith('crossly_oauth='))).to.equal(true);
     });
 
-    it('GET /auth/callback completes login, sets an authenticated session, and /me reflects it', async () => {
+    it('GET /api/v1/auth/callback completes login, sets an authenticated session, and /me reflects it', async () => {
         const agent = request.agent(app);
         const callback = await login(agent);
 
         expect(callback.status).to.equal(302);
         expect(callback.headers.location).to.equal(config.uiRedirectUrl);
 
-        const me = (await agent.get('/auth/me')).body as MeResponse;
+        const me = (await agent.get('/api/v1/auth/me')).body as MeResponse;
         expect(me.guest).to.equal(false);
         expect(me.clientId).to.be.a('string').with.length.greaterThan(0);
         expect(me.email).to.equal('test@example.com');
@@ -126,25 +150,25 @@ describe('auth API (integration, cookie model)', () => {
 
     it('rejects a callback whose state does not match the cookie (CSRF) with 400', async () => {
         const agent = request.agent(app);
-        await agent.get('/auth/login'); // sets the oauth cookie with the real state
+        await agent.get('/api/v1/auth/login'); // sets the oauth cookie with the real state
 
-        const response = await agent.get('/auth/callback?code=fake-code&state=tampered');
+        const response = await agent.get('/api/v1/auth/callback?code=fake-code&state=tampered');
         expect(response.status).to.equal(400);
     });
 
     it('rejects a callback with no oauth cookie (400)', async () => {
-        const response = await request(app).get('/auth/callback?code=fake-code&state=whatever');
+        const response = await request(app).get('/api/v1/auth/callback?code=fake-code&state=whatever');
         expect(response.status).to.equal(400);
     });
 
     it('promotes the guest in place: after login /me keeps the guest clientId', async () => {
         const agent = request.agent(app);
-        const guest = await agent.post('/auth/guest');
-        const guestClientId = (guest.body as SessionSummary).clientId;
+        const guest = await agent.post('/api/v1/auth/guest');
+        const guestClientId = (guest.body as SessionResponse).clientId;
 
         await login(agent);
 
-        const me = (await agent.get('/auth/me')).body as MeResponse;
+        const me = (await agent.get('/api/v1/auth/me')).body as MeResponse;
         expect(me.clientId).to.equal(guestClientId);
         expect(me.guest).to.equal(false);
     });
@@ -152,29 +176,29 @@ describe('auth API (integration, cookie model)', () => {
     it('a returning login on a different device resolves to the same client', async () => {
         // Device A: guest -> login (promotes), capture the account id.
         const deviceA = request.agent(app);
-        await deviceA.post('/auth/guest');
+        await deviceA.post('/api/v1/auth/guest');
         await login(deviceA);
-        const idA = ((await deviceA.get('/auth/me')).body as MeResponse).clientId;
+        const idA = ((await deviceA.get('/api/v1/auth/me')).body as MeResponse).clientId;
 
         // Device B: fresh agent, no guest -> login with the same identity.
         const deviceB = request.agent(app);
         await login(deviceB);
-        const idB = ((await deviceB.get('/auth/me')).body as MeResponse).clientId;
+        const idB = ((await deviceB.get('/api/v1/auth/me')).body as MeResponse).clientId;
 
         expect(idB).to.equal(idA);
     });
 
-    it('POST /auth/logout clears the session; /me then returns 401', async () => {
+    it('POST /api/v1/auth/logout clears the session; /me then returns 401', async () => {
         const agent = request.agent(app);
-        await agent.post('/auth/guest');
+        await agent.post('/api/v1/auth/guest');
 
-        const loggedOut = await agent.post('/auth/logout');
+        const loggedOut = await agent.post('/api/v1/auth/logout');
         expect(loggedOut.status).to.equal(204);
 
-        expect((await agent.get('/auth/me')).status).to.equal(401);
+        expect((await agent.get('/api/v1/auth/me')).status).to.equal(401);
     });
 
-    it('GET /auth/login returns 503 when no provider is configured', async () => {
+    it('GET /api/v1/auth/login returns 503 when no provider is configured', async () => {
         const disabled = createApp({
             signer,
             clients: new InMemoryClientRepository(),
@@ -182,7 +206,7 @@ describe('auth API (integration, cookie model)', () => {
             config,
         });
 
-        const response = await request(disabled).get('/auth/login');
+        const response = await request(disabled).get('/api/v1/auth/login');
         expect(response.status).to.equal(503);
     });
 });

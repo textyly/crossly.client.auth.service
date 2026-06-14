@@ -39,7 +39,7 @@ export function createApp({ signer, clients, oidc, config }: AppDependencies): E
 
     const manager = new AuthManager(signer, clients);
     const controller = new AuthController(manager, oidc, config);
-    app.use('/auth', controller.router);
+    app.use('/api/v1/auth', controller.router);
 
     return app;
 }
